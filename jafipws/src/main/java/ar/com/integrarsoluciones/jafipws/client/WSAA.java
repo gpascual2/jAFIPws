@@ -4,8 +4,6 @@ import java.io.FileInputStream;
 import java.security.KeyStore;
 import java.security.PrivateKey;
 import java.security.Security;
-import java.security.cert.CertStore;
-import java.security.cert.CollectionCertStoreParameters;
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
 import java.util.Date;
@@ -16,20 +14,16 @@ import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.commons.codec.binary.Base64;
-import org.bouncycastle.asn1.pkcs.SignerInfo;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
 import org.bouncycastle.cms.CMSSignedDataGenerator;
 import org.bouncycastle.cms.CMSTypedData;
-import org.bouncycastle.cms.SignerInformation;
-import org.bouncycastle.cms.SignerInformationStore;
 import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
 import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
-import org.bouncycastle.util.Store;
 import org.springframework.oxm.jaxb.Jaxb2Marshaller;;
 
 /**
@@ -115,30 +109,10 @@ public class WSAA {
 	public String callWSAA(){
 		String tra = null;
 		byte [] cms = null;
-		
-		//WSAAInterface wsaaService = null;
-		/*
-        try{
-        	if (wsMode == WSModes.PROD)
-        	{
-        		wsaaService = new WSAA_PROD();
-        	}
-        	else
-        	{
-        		wsaaService = new WSAA_HOMO();
-        	}
-        	cms = createTRACMS();
-        	tra = wsaaService.callWSAA(cms, getServiceURL());
-        	
-        } catch(Exception e){
-            e.printStackTrace();
-            System.err.println("\n\n\n");
-        }
-        */
+
 		WSAAConfiguration wsaaConfig = new WSAAConfiguration();
 		Jaxb2Marshaller marshaller = wsaaConfig.marshaller();
-		WSAAClient client = wsaaConfig.wsaaClient(marshaller);
-		client.setDefaultUri(getServiceURL(TargetServices.WSAA));
+		WSAAClient client = wsaaConfig.wsaaClient(marshaller, getServiceURL(TargetServices.WSAA));
 		
 		try{
         	cms = createTRACMS();
@@ -206,7 +180,6 @@ public class WSAA {
 		PrivateKey pKey = null;
 		X509Certificate pCertificate = null;
 		String signerDN = null;
-		//CertStore certs = null;
 		JcaCertStore certs = null;
 		String data = "";
 		byte [] asn1_cms = null;
@@ -218,23 +191,15 @@ public class WSAA {
 			}
 			
 			// Open keystore
-	    	//KeyStore ks = KeyStore.getInstance("jks");
-			//FileInputStream jksStream = new FileInputStream (keyStorePath);
-			//ks.load(jksStream, cuit.toCharArray());
-			//jksStream.close();
-			
-			// Create a keystore using keys from the pkcs#12 p12file
-			KeyStore ks = KeyStore.getInstance("pkcs12");
-			FileInputStream p12stream = new FileInputStream ( "C:\\source\\AFIP-WS\\AFIPWS_23288660069_2.p12" ) ;
-			String p12pass = "23288660069";
-			ks.load(p12stream, p12pass.toCharArray());
-			p12stream.close();
+	    	KeyStore ks = KeyStore.getInstance("jks");
+			FileInputStream jksStream = new FileInputStream (keyStorePath);
+			ks.load(jksStream, cuit.toCharArray());
+			jksStream.close();
 			
 			// Get Certificate & Private key from KeyStore
 			pKey = (PrivateKey) ks.getKey(getKeyAlias(), cuit.toCharArray());
 			System.out.println(pKey.getEncoded());
 			System.out.println(Base64.encodeBase64String(pKey.getEncoded()));
-			
 			
 			pCertificate = (X509Certificate)ks.getCertificate(getKeyAlias());
 			signerDN = pCertificate.getSubjectDN().toString();
@@ -242,7 +207,6 @@ public class WSAA {
 			// Create a list of Certificates to include in the final CMS
 			ArrayList<X509Certificate> certList = new ArrayList<X509Certificate>();
 			certList.add(pCertificate);
-			//certs = CertStore.getInstance("Collection", new CollectionCertStoreParameters (certList), "BC"); // JcaCertStore(certList);
 			certs = new JcaCertStore(certList);
 		}
 		catch (Exception e)
@@ -257,12 +221,7 @@ public class WSAA {
 		{
 		    // Create CMS data generator instance
 		    CMSSignedDataGenerator gen = new CMSSignedDataGenerator();
-		    
-		    //SignerInfo sI = new SignerInfo(pKey.);
-		    //SignerInformation sInfo = new SignerInformation();
-		    //SignerInformationStore sStore = new SignerInformationStore(sInfo);
-		    //gen.addSigners(null);
-		    
+	    
 		    // Create Content signer and attach to CMS data generator
 		    ContentSigner sha1Signer = new JcaContentSignerBuilder("SHA1with" + pKey.getAlgorithm())
 		    		.setProvider("BC")
@@ -316,7 +275,7 @@ public class WSAA {
 	 * @param CUIT or source entity
 	 */
 	public void setCuit(String cuit) {
-		this.cuit = cuit;
+		WSAA.cuit = cuit;
 	}
 
 
@@ -333,7 +292,7 @@ public class WSAA {
 	 * @param Path of the Key Store (JKS)
 	 */
 	public void setKeyStorePath(String keyStorePath) {
-		this.keyStorePath = keyStorePath;
+		WSAA.keyStorePath = keyStorePath;
 	}
 
 	/**
@@ -343,7 +302,7 @@ public class WSAA {
 	 * @param Mode (HOMO or PROD)
 	 */
 	public void setWsMode(WSModes wsMode) {
-		this.wsMode = wsMode;
+		WSAA.wsMode = wsMode;
 	}
 
 	/**
@@ -359,7 +318,7 @@ public class WSAA {
 	 * @param Target Service (WSFEV1)
 	 */
 	public void setTargetService(TargetServices targetService) {
-		this.targetService = targetService;
+		WSAA.targetService = targetService;
 	}
 
 	

@@ -15,9 +15,9 @@ public class WSAAConfiguration {
 	}
 
 	@Bean
-	public WSAAClient wsaaClient(Jaxb2Marshaller marshaller) {
+	public WSAAClient wsaaClient(Jaxb2Marshaller marshaller, String defaultUri) {
 		WSAAClient client = new WSAAClient();
-		client.setDefaultUri("https://wsaahomo.afip.gov.ar/ws/services/LoginCms");
+		client.setDefaultUri(defaultUri);
 		client.setMarshaller(marshaller);
 		client.setUnmarshaller(marshaller);
 		return client;
