@@ -1,20 +1,6 @@
 package ar.com.integrarsoluciones.jafipws;
 
-import java.io.FileInputStream;
-import java.security.KeyStore;
-import java.security.PrivateKey;
-import java.security.cert.X509Certificate;
-import java.util.ArrayList;
-
-import org.bouncycastle.cert.jcajce.JcaCertStore;
-import org.bouncycastle.cms.CMSProcessableByteArray;
-import org.bouncycastle.cms.CMSSignedData;
-import org.bouncycastle.cms.CMSSignedDataGenerator;
-import org.bouncycastle.cms.CMSTypedData;
-import org.bouncycastle.cms.jcajce.JcaSignerInfoGeneratorBuilder;
-import org.bouncycastle.operator.ContentSigner;
-import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.bouncycastle.operator.jcajce.JcaDigestCalculatorProviderBuilder;
+import org.apache.log4j.PropertyConfigurator;
 
 import ar.com.integrarsoluciones.jafipws.client.WSAA;
 import ar.com.integrarsoluciones.jafipws.client.WSAA.TargetServices;
@@ -29,6 +15,10 @@ public class App
     public static void main( String[] args )
     {
         System.out.println( "Hello World!" );
+        
+        // Setup Logger
+        String log4jConfPath = "src/main/resources/log4j.properties";
+        PropertyConfigurator.configure(log4jConfPath);
         
         //tests here...
         testWSAA();

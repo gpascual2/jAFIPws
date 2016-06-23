@@ -98,7 +98,8 @@ public class WSAA {
 		Hashtable<WSModes, String> dnPrefix = new Hashtable<WSModes, String>();
 		dnPrefix.put(WSModes.HOMO, "cn=wsaahomo,o=afip,c=ar,serialNumber=CUIT ");
 		dnPrefix.put(WSModes.PROD, "cn=wsaa,o=afip,c=ar,serialNumber=CUIT ");
-		String destDN = dnPrefix.get(wsMode) + cuit.trim();
+		//String destDN = dnPrefix.get(wsMode) + cuit.trim();
+		String destDN = dnPrefix.get(wsMode) + "33693450239";  // Destino es AFIP
 		return destDN;
 	}
 	
@@ -198,8 +199,8 @@ public class WSAA {
 			
 			// Get Certificate & Private key from KeyStore
 			pKey = (PrivateKey) ks.getKey(getKeyAlias(), cuit.toCharArray());
-			System.out.println(pKey.getEncoded());
-			System.out.println(Base64.encodeBase64String(pKey.getEncoded()));
+//			System.out.println(pKey.getEncoded());
+//			System.out.println(Base64.encodeBase64String(pKey.getEncoded()));
 			
 			pCertificate = (X509Certificate)ks.getCertificate(getKeyAlias());
 			signerDN = pCertificate.getSubjectDN().toString();
@@ -230,7 +231,7 @@ public class WSAA {
 		    		new JcaDigestCalculatorProviderBuilder()
 		    		.setProvider("BC")
 		    		.build())
-		    		.setDirectSignature(true)
+		    		//.setDirectSignature(true)
 		    		.build(sha1Signer, pCertificate));
 		    gen.addCertificates(certs);
 		    
@@ -238,7 +239,7 @@ public class WSAA {
 		    CMSTypedData cmsData = new CMSProcessableByteArray(data.getBytes());
 		    
 		    //Sign data
-		    CMSSignedData sigData = gen.generate(cmsData, false);
+		    CMSSignedData sigData = gen.generate(cmsData, true);
 		    
 		    asn1_cms = sigData.getEncoded();
 		}
