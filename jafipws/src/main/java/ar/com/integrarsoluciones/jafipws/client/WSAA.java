@@ -13,7 +13,6 @@ import java.util.Hashtable;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
 
-import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.cert.jcajce.JcaCertStore;
 import org.bouncycastle.cms.CMSProcessableByteArray;
 import org.bouncycastle.cms.CMSSignedData;
@@ -199,9 +198,6 @@ public class WSAA {
 			
 			// Get Certificate & Private key from KeyStore
 			pKey = (PrivateKey) ks.getKey(getKeyAlias(), cuit.toCharArray());
-//			System.out.println(pKey.getEncoded());
-//			System.out.println(Base64.encodeBase64String(pKey.getEncoded()));
-			
 			pCertificate = (X509Certificate)ks.getCertificate(getKeyAlias());
 			signerDN = pCertificate.getSubjectDN().toString();
 	
@@ -231,7 +227,6 @@ public class WSAA {
 		    		new JcaDigestCalculatorProviderBuilder()
 		    		.setProvider("BC")
 		    		.build())
-		    		//.setDirectSignature(true)
 		    		.build(sha1Signer, pCertificate));
 		    gen.addCertificates(certs);
 		    
