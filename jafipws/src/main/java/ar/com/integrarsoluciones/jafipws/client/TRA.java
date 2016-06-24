@@ -14,8 +14,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
-import org.mapdb.DB;
-
+import ar.com.integrarsoluciones.jafipws.Config;
 import ar.com.integrarsoluciones.jafipws.client.WSAA.TargetServices;
 import ar.com.integrarsoluciones.jafipws.client.WSAA.WSModes;
 
@@ -25,7 +24,6 @@ import ar.com.integrarsoluciones.jafipws.client.WSAA.WSModes;
  *
  */
 public class TRA {
-	private DB db;
 	private Boolean valid;
 	private String cuit;
 	private TargetServices service;
@@ -34,17 +32,16 @@ public class TRA {
 	private String sign;
 	private Date expiration;
 	
-	public TRA(String cuit, TargetServices service, WSModes mode, DB db) {
+	public TRA(Config cfg, String cuit, TargetServices service, WSModes mode) {
 		super();
 		this.cuit = cuit;
 		this.service = service;
 		this.mode = mode;
-		this.db = db;
 		this.valid = false;
 		
 		Logger  logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.client.TRA");
 		
-		Map<String,String> map = this.db.getTreeMap("wsaaTraMap");
+		Map<String,String> map = cfg.getDb().getTreeMap("wsaaTraMap");
 		String traKey = cuit + "_" + service.toString() + "_" + mode.toString();
 		String storedTra = map.get(traKey);
 		// If there is a TRA cached, then validate and load
@@ -59,7 +56,7 @@ public class TRA {
 				if(this.getExpiration().before(new Date()))
 				{
 					map.remove(traKey);
-					this.db.commit();
+					cfg.getDb().commit();
 					this.setToken("");
 					this.setSign("");
 					this.setExpiration(null);
@@ -78,7 +75,7 @@ public class TRA {
 	}
 	
 	// Call WSAA, get a valid TRA and then store in cache
-	public void callWSAA(String keyStore)
+	public void callWSAA(Config cfg, String keyStore)
     {
 		Logger  logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.client.TRA");
 		
@@ -102,11 +99,11 @@ public class TRA {
     	this.valid = true;
     	
     	//Cache response
-    	Map<String,String> map = this.db.getTreeMap("wsaaTraMap");
+    	Map<String,String> map = cfg.getDb().getTreeMap("wsaaTraMap");
 		String traKey = cuit + "_" + this.getService().toString() + "_" + this.getMode().toString();
 		String traCacheXml = this.getCacheString();
 		map.put(traKey, traCacheXml);
-        this.db.commit();
+        cfg.getDb().commit();
         logger.debug("TRA added to cache: " + traKey);
     }
 		
