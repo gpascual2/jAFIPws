@@ -1,7 +1,7 @@
 /**
  * 
  */
-package ar.com.integrarsoluciones.jafipws.client;
+package ar.com.integrarsoluciones.jafipws;
 
 import java.io.Reader;
 import java.io.StringReader;
@@ -14,7 +14,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
 import org.apache.log4j.Logger;
 import org.dom4j.Document;
 import org.dom4j.io.SAXReader;
-import ar.com.integrarsoluciones.jafipws.Config;
+
+import ar.com.integrarsoluciones.jafipws.client.WSAA;
 import ar.com.integrarsoluciones.jafipws.client.WSAA.TargetServices;
 import ar.com.integrarsoluciones.jafipws.client.WSAA.WSModes;
 
@@ -28,9 +29,11 @@ public class TRA {
 	private String cuit;
 	private TargetServices service;
 	private WSModes mode;
+	private String targetServiceUrl;
 	private String token;
 	private String sign;
 	private Date expiration;
+	private Logger logger;
 	
 	public TRA(Config cfg, String cuit, TargetServices service, WSModes mode) {
 		super();
@@ -38,11 +41,10 @@ public class TRA {
 		this.service = service;
 		this.mode = mode;
 		this.valid = false;
-		
-		Logger  logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.client.TRA");
+		this.logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.TRA");
 		
 		Map<String,String> map = cfg.getDb().getTreeMap("wsaaTraMap");
-		String traKey = cuit + "_" + service.toString() + "_" + mode.toString();
+		String traKey = this.cuit + "_" + service.toString() + "_" + mode.toString();
 		String storedTra = map.get(traKey);
 		// If there is a TRA cached, then validate and load
 		if (storedTra != null)
@@ -61,13 +63,13 @@ public class TRA {
 					this.setSign("");
 					this.setExpiration(null);
 					this.valid = false;
-					logger.debug("Cached TRA expired: " + traKey + " - Requesting new one to WSAA...");
+					this.logger.debug("Cached TRA expired: " + traKey + " - Requesting new one to WSAA...");
 				}
 				// Else, is current, then set valid flag to true
 				else
 				{
 					this.valid = true;
-					logger.debug("Cached TRA found: " + traKey);
+					this.logger.debug("Cached TRA found: " + traKey);
 				}
 			}
 		}
@@ -77,22 +79,21 @@ public class TRA {
 	// Call WSAA, get a valid TRA and then store in cache
 	public void callWSAA(Config cfg, String keyStore)
     {
-		Logger  logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.client.TRA");
-		
     	String tra = null;
     	WSAA wsaa = new WSAA();
     	wsaa.setCuit(this.getCuit());
     	wsaa.setKeyStorePath(keyStore);
     	wsaa.setTargetService(this.getService());
     	wsaa.setWsMode(this.getMode());
+    	this.setTargetServiceUrl(wsaa.getServiceURL());
     	try
     	{
     		tra = wsaa.callWSAA();
-    		logger.debug("WSAA TRA: " + tra);
+    		this.logger.debug("WSAA TRA: " + tra);
     	}
     	catch (Exception e)
     	{
-    		logger.error(e.toString());
+    		this.logger.error(e.toString());
     	}
     	//Parse WSAA response and store values in local object
     	parseWsaaResponse(tra);
@@ -100,17 +101,15 @@ public class TRA {
     	
     	//Cache response
     	Map<String,String> map = cfg.getDb().getTreeMap("wsaaTraMap");
-		String traKey = cuit + "_" + this.getService().toString() + "_" + this.getMode().toString();
+		String traKey = this.cuit + "_" + this.getService().toString() + "_" + this.getMode().toString();
 		String traCacheXml = this.getCacheString();
 		map.put(traKey, traCacheXml);
         cfg.getDb().commit();
-        logger.debug("TRA added to cache: " + traKey);
+        this.logger.debug("TRA added to cache: " + traKey);
     }
 		
 	// Returns the info in the String format to store in cache
 	private String getCacheString(){
-		// get a logger instance 
-        Logger  logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.client.TRA");
 		// convert expiration time to XML Calendar
 		GregorianCalendar expTime = new GregorianCalendar();
 		expTime.setTime(this.getExpiration());
@@ -121,22 +120,20 @@ public class TRA {
 		}
 		catch (Exception e)
 		{
-			logger.error(e.toString());
+			this.logger.error(e.toString());
 		}
 		String xml = "";
 		xml = xml + "<tra>";
 		xml = xml + "<expirationTime>" + xmlExpTime + "</expirationTime>";
 		xml = xml + "<token>" + this.getToken() + "</token>";
 		xml = xml + "<sign>" + this.getSign() + "</sign>";
+		xml = xml + "<serviceUrl>" + this.getTargetServiceUrl() + "</serviceUrl>";
 		xml = xml + "</tra>";
 		return xml;
 	}
 	
 	private void parseCacheString(String xml)
 	{
-		// get a logger instance 
-        Logger  logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.client.TRA");
-        
         String readExpTime = "";
         
         // Get token & sign from xml cache string
@@ -146,8 +143,9 @@ public class TRA {
 			readExpTime = tokenDoc.valueOf("/tra/expirationTime");
 			this.setToken(tokenDoc.valueOf("/tra/token"));
 			this.setSign(tokenDoc.valueOf("/tra/sign"));
+			this.setTargetServiceUrl(tokenDoc.valueOf("/tra/serviceUrl"));
 		} catch (Exception e) {
-			logger.error(e.toString());
+			this.logger.error(e.toString());
 		}
 		
 		// convert & store expiration date
@@ -160,15 +158,12 @@ public class TRA {
 		}
 		catch (Exception e)
 		{
-			logger.error(e.toString());
+			this.logger.error(e.toString());
 		}
 	}
 	
 	private void parseWsaaResponse(String xml)
 	{
-		// get a logger instance 
-        Logger  logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.client.TRA");
-        
         String readExpTime = "";
         
         // Get token & sign from xml cache string
@@ -179,7 +174,7 @@ public class TRA {
 			this.setToken(tokenDoc.valueOf("/loginTicketResponse/credentials/token"));
 			this.setSign(tokenDoc.valueOf("/loginTicketResponse/credentials/sign"));
 		} catch (Exception e) {
-			logger.error(e.toString());
+			this.logger.error(e.toString());
 		}
 		
 		// convert & store expiration date
@@ -192,7 +187,7 @@ public class TRA {
 		}
 		catch (Exception e)
 		{
-			logger.error(e.toString());
+			this.logger.error(e.toString());
 		}
 	}
 	
@@ -275,6 +270,20 @@ public class TRA {
 	 */
 	public Boolean isValid() {
 		return valid;
+	}
+
+	/**
+	 * @return the targetServiceUrl
+	 */
+	public String getTargetServiceUrl() {
+		return targetServiceUrl;
+	}
+
+	/**
+	 * @param targetServiceUrl the targetServiceUrl to set
+	 */
+	public void setTargetServiceUrl(String targetServiceUrl) {
+		this.targetServiceUrl = targetServiceUrl;
 	}
 
 	

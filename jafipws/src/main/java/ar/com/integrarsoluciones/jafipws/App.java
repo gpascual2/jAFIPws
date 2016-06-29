@@ -2,9 +2,10 @@ package ar.com.integrarsoluciones.jafipws;
 
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
-import ar.com.integrarsoluciones.jafipws.client.TRA;
+
 import ar.com.integrarsoluciones.jafipws.client.WSAA.TargetServices;
 import ar.com.integrarsoluciones.jafipws.client.WSAA.WSModes;
+import ar.com.integrarsoluciones.jafipws.client.WSFE;
 
 /**
  * Hello world!
@@ -22,11 +23,15 @@ public class App
         // get a logger instance 
         Logger  logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws");
         
+        
+        // Test WSAA with Config and TRA classes
+        Config cfg = null;
+        TRA tra = null;
         try{
 	        // Get config object
-        	Config cfg = new Config("C:/source/AFIP-WS/jCfgFiles/");
+        	cfg = new Config("C:/source/AFIP-WS/jCfgFiles/");
         	// get TRA
-        	TRA tra = new TRA(cfg, "23288660069", TargetServices.WSFEV1, WSModes.HOMO);
+        	tra = new TRA(cfg, "23288660069", TargetServices.WSFEV1, WSModes.HOMO);
 	        if (!tra.isValid())
 	        {
 	        	tra.callWSAA(cfg, "C:\\source\\AFIP-WS\\AFIPWS_23288660069.jks");
@@ -40,6 +45,31 @@ public class App
         {
         	logger.error(e);
         }
+        
+        // Test WSFE class
+        WSFE wsfe = null;
+        String serverStatus = "n/a";
+        String tiposComprobante = "";
+        try
+        {
+        	wsfe =  new WSFE(tra);
+        	
+        	serverStatus = wsfe.callDummy();
+        	logger.info("WSFE Servers Status: " + serverStatus);
+        	
+        	tiposComprobante = wsfe.getParamTiposComprobante();
+        	logger.info("Tipos de Comprobantes: " + tiposComprobante);
+        	
+        }
+        catch (Exception e)
+        {
+        	logger.error(e);
+        }
+        
+        
+        
+        
+        
    
     }
     

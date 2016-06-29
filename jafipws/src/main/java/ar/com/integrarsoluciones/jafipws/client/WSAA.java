@@ -78,10 +78,26 @@ public class WSAA {
 		return getIntServiceURL(svc);
 	}
 	
-	public static String getServiceURL()
+	public String getServiceURL()
 	{
 		String svc = getTargetService().toString() + "_" + wsMode.toString();
 		return getIntServiceURL(svc);
+	}
+	
+	/**
+	 * Get the target web service set for use in the TRA ticket request
+	 * @return the targetService
+	 */
+	public TargetServices getTargetService() {
+		return targetService;
+	}
+
+	/**
+	 * Set the target AFIP's web service that will be used in the TRA ticket request
+	 * @param Target Service (WSFEV1)
+	 */
+	public void setTargetService(TargetServices targetService) {
+		WSAA.targetService = targetService;
 	}
 	
 	private static String getServiceCode(TargetServices service)
@@ -299,22 +315,6 @@ public class WSAA {
 	 */
 	public void setWsMode(WSModes wsMode) {
 		WSAA.wsMode = wsMode;
-	}
-
-	/**
-	 * Get the target web service set for use in the TRA ticket request
-	 * @return the targetService
-	 */
-	public static TargetServices getTargetService() {
-		return targetService;
-	}
-
-	/**
-	 * Set the target AFIP's web service that will be used in the TRA ticket request
-	 * @param Target Service (WSFEV1)
-	 */
-	public void setTargetService(TargetServices targetService) {
-		WSAA.targetService = targetService;
 	}
 
 	
