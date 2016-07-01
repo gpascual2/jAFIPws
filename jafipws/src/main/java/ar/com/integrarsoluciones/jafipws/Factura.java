@@ -3,10 +3,9 @@
  */
 package ar.com.integrarsoluciones.jafipws;
 
+import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
-
+import java.util.List;
 import org.apache.log4j.Logger;
 
 import ar.com.integrarsoluciones.jafipws.client.WSAA.WSModes;
@@ -25,7 +24,7 @@ public class Factura {
 	private Date fechaComprobante;
 	private int tipoComprobante;
 	private int puntoVenta;
-	private int numeroComprobante;
+	private long numeroComprobante;
 	private int tipoDocumentoCliente;
 	private String numeroDocumentoCliente;
 	private int concepto;
@@ -41,14 +40,53 @@ public class Factura {
 	private String codigoMoneda;
 	private double cotizacionMoneda;
 	
-	private Set<ComprobanteAsociado> comprobantesAsociados = new HashSet<ComprobanteAsociado>();
-	private Set<Tributo> tributos = new HashSet<Tributo>();
-	private Set<AlicuotaIVA> alicuotasIva = new HashSet<AlicuotaIVA>();
+	//private Set<ComprobanteAsociado> comprobantesAsociados = new HashSet<ComprobanteAsociado>();
+	private List<ComprobanteAsociado> comprobantesAsociados;
+	//private Set<Tributo> tributos = new HashSet<Tributo>();
+	private List<Tributo> tributos;
+	//private Set<AlicuotaIVA> alicuotasIva = new HashSet<AlicuotaIVA>();
+	private List<AlicuotaIVA> alicuotasIva;
 	
 	private String estadoCae;
 	private String cae;
 	private Date vencimientoCae;
 	private String observacionesCae;
+	
+	
+	public Factura() {
+		this.logger = Logger.getLogger("ar.com.integrarsoluciones.jafipws.Factura");
+		//Inicializar defaults
+		this.mode = WSModes.HOMO;
+		this.token = "";
+		this.sign = "";
+		this.cuit = "";
+		this.tipoComprobante = 0;
+		this.puntoVenta = 0;
+		this.fechaComprobante = new Date();
+		this.numeroComprobante = 0;
+		this.tipoDocumentoCliente = 99;
+		this.numeroDocumentoCliente = "1";
+		this.concepto = 1;                  //(1=Productos, 2=Servicios, 3=Productos y Servicios) 
+		this.importeTotal = 0;
+		this.importeNoGravado = 0;
+		this.importeGravado = 0;
+		this.importeExcento = 0;
+		this.importeTributos = 0;
+		this.importeIva = 0;
+		this.fechaServicioDesde = this.fechaComprobante;
+		this.fechaServicioHasta = this.fechaComprobante;
+		this.fechaVencimiento = this.fechaComprobante;
+		this.codigoMoneda = "PES";
+		this.cotizacionMoneda = 1;
+		this.estadoCae = "R";
+		this.cae = "";
+		this.vencimientoCae = this.fechaComprobante;
+		this.observacionesCae = "";
+		//Inicializar arrays
+        this.tributos = new ArrayList<Tributo>();
+        this.comprobantesAsociados = new ArrayList<ComprobanteAsociado>();
+        this.alicuotasIva = new ArrayList<AlicuotaIVA>();
+	}
 	
 	/**
 	 * @param token
@@ -89,6 +127,12 @@ public class Factura {
 		this.cae = "";
 		this.vencimientoCae = this.fechaComprobante;
 		this.observacionesCae = "";
+		//Inicializar arrays
+        this.tributos = new ArrayList<Tributo>();
+        this.comprobantesAsociados = new ArrayList<ComprobanteAsociado>();
+        this.alicuotasIva = new ArrayList<AlicuotaIVA>();
+        
+
 	}
 	
 	
@@ -102,11 +146,6 @@ public class Factura {
 	
 	
 	
-	
-	
-	
-	
-	
 	/**
 	 * @param Comprobante asociado
 	 */
@@ -115,12 +154,26 @@ public class Factura {
     }
 	
 	/**
+	 * @return the comprobantesAsociados
+	 */
+	public List<ComprobanteAsociado> getComprobantesAsociados() {
+		return comprobantesAsociados;
+	}
+	
+	/**
 	 * @param Tributo
 	 */
 	public void agregarTributo(final Tributo tributo) {
 		tributos.add(tributo);
     }
-	
+
+	/**
+	 * @return the tributos
+	 */
+	public List<Tributo> getTributos() {
+		return tributos;
+	}
+
 	/**
 	 * @param Alicuota de IVA
 	 */
@@ -128,6 +181,12 @@ public class Factura {
 		alicuotasIva.add(iva);
     }
 		
+	/**
+	 * @return the alicuotasIva
+	 */
+	public List<AlicuotaIVA> getAlicuotasIva() {
+		return alicuotasIva;
+	}
 	
 	/**
 	 * @return the token
@@ -216,14 +275,14 @@ public class Factura {
 	/**
 	 * @return the numeroComprobante
 	 */
-	public int getNumeroComprobante() {
+	public long getNumeroComprobante() {
 		return numeroComprobante;
 	}
 
 	/**
 	 * @param numeroComprobante the numeroComprobante to set
 	 */
-	public void setNumeroComprobante(int numeroComprobante) {
+	public void setNumeroComprobante(long numeroComprobante) {
 		this.numeroComprobante = numeroComprobante;
 	}
 

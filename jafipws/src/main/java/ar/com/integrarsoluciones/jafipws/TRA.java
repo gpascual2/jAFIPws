@@ -63,13 +63,13 @@ public class TRA {
 					this.setSign("");
 					this.setExpiration(null);
 					this.valid = false;
-					this.logger.debug("Cached TRA expired: " + traKey + " - Requesting new one to WSAA...");
+					this.logger.info("Cached TRA expired: " + traKey + " - Requesting new one to WSAA...");
 				}
 				// Else, is current, then set valid flag to true
 				else
 				{
 					this.valid = true;
-					this.logger.debug("Cached TRA found: " + traKey);
+					this.logger.info("Cached TRA found: " + traKey);
 				}
 			}
 		}
